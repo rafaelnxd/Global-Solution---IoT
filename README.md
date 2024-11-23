@@ -21,8 +21,10 @@ As anomalias podem variar desde um simples problema até algo mais sério, como 
 
 ### 2.1. Coleta e Pré-processamento dos Dados
 
+
+
 **Carregamento dos Dados:**  
-Utilizamos um dataset de uso de energia em residências inteligentes, contendo informações como consumo energético, configurações de temperatura, status de ocupação, uso de eletrodomésticos e dados temporais.
+Utilizamos um dataset de uso de energia em residências inteligentes, contendo informações como consumo energético, configurações de temperatura, status de ocupação, uso de eletrodomésticos e dados temporais. https://www.kaggle.com/datasets/arnavsmayan/smart-home-energy-usage-dataset?resource=download
 
 **Limpeza dos Dados:**
 
