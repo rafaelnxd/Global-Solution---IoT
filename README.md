@@ -1,99 +1,124 @@
-Previsão e Detecção de Anomalias no Consumo de Energia em Residências Inteligentes
+# Previsão e Detecção de Anomalias no Consumo de Energia em Residências Inteligentes
 
-1\. Descrição do Problema
+## 1. Descrição do Problema
 
 Com o crescente uso de dispositivos eletrônicos e sistemas de climatização em residências, monitorar e prever o consumo de energia elétrica tornou-se essencial para otimizar custos e promover a sustentabilidade. Este projeto visa desenvolver modelos de Machine Learning capazes de:
 
-Prever o consumo de energia elétrica (energy_consumption_kWh) em residências inteligentes com base em variáveis como temperatura, status de ocupação, uso de eletrodomésticos, e características temporais.
+- **Prever** o consumo de energia elétrica (`energy_consumption_kWh`) em residências inteligentes com base em variáveis como temperatura, status de ocupação, uso de eletrodomésticos e características temporais.
+  
+- **Detectar** anomalias no consumo de energia que possam indicar comportamentos atípicos ou falhas nos sistemas.
 
-Detectar anomalias no consumo de energia que possam indicar comportamentos atípicos ou falhas nos sistemas.
+**Como faria isso?**  
+Esses modelos estariam no firmware de plugs de tomada inteligentes, que monitoram continuamente o consumo de kWh e outras variáveis. Isso permite tanto prever o consumo elétrico para automatizar certas ações quanto identificar anomalias. Com base nas anomalias detectadas, o cliente recebe uma notificação via aplicativo que indica que algo está errado. Através da notificação, o cliente pode:
 
-Como faria isso? Esses modelos estariam no firmware de plugs de tomada inteligentes, nos quais a todo momento está fazendo detecções de kWh e as outras variáveis, e assim pode-se tanto prever o consumo elétrico para automatizar certas ações mas também identificar anomalias, que com base nelas, o cliente recebe uma notificação via app que o indica que tem algo de errado acontecendo. Através da notificação, o cliente irá até o dispositivo em questão e identificará qual é a causa, respondendo pelo sistema, mas também tem a opção de desligar o fornecimento de energia remotamente. Ela vai poder ser desde um simples problema até algo mais sério como equipamento danificado.
+- Verificar o dispositivo em questão para identificar a causa.
+- Responder ao sistema.
+- Desligar o fornecimento de energia remotamente, caso necessário.
 
-2\. Metodologia
+As anomalias podem variar desde um simples problema até algo mais sério, como um equipamento danificado.
 
-2.1. Coleta e Pré-processamento dos Dados
+## 2. Metodologia
 
-Carregamento dos Dados: Utilizamos um dataset de uso de energia em residências inteligentes, contendo informações como consumo energético, configurações de temperatura, status de ocupação, uso de eletrodomésticos, e dados temporais.
+### 2.1. Coleta e Pré-processamento dos Dados
 
-Limpeza dos Dados:
+**Carregamento dos Dados:**  
+Utilizamos um dataset de uso de energia em residências inteligentes, contendo informações como consumo energético, configurações de temperatura, status de ocupação, uso de eletrodomésticos e dados temporais.
 
-Remoção de registros com consumo de energia negativo.
+**Limpeza dos Dados:**
 
-Conversão da coluna occupancy_status para binário (1 = Occupied, 0 = Unoccupied).
+- Remoção de registros com consumo de energia negativo.
+- Conversão da coluna `occupancy_status` para binário (1 = Occupied, 0 = Unoccupied).
 
-Engenharia de Features Temporais:
+**Engenharia de Features Temporais:**
 
-Extração de informações como ano, mês, dia, dia da semana e hora a partir da coluna timestamp.
+- Extração de informações como ano, mês, dia, dia da semana e hora a partir da coluna `timestamp`.
+- Criação de indicadores adicionais, como `peak_hour` (horário de pico das 18h às 21h).
 
-Criação de indicadores adicionais, como peak_hour (horário de pico das 18h às 21h).
+**Agregação dos Dados:**
 
-Agregação dos Dados:
+- Agregamos os dados diariamente por `home_id`, somando o consumo de energia e calculando médias de temperatura, além de outras métricas relevantes.
 
-Agregamos os dados diariamente por home_id, somando o consumo de energia e calculando médias de temperatura, além de outras métricas relevantes.
+**Codificação de Variáveis Categóricas:**
 
-Codificação de Variáveis Categóricas:
+- Aplicamos **One-Hot Encoding** nas colunas categóricas (`season`, `day_of_week`, `appliance`) para convertê-las em formato numérico.
 
-Aplicamos One-Hot Encoding nas colunas categóricas (season, day_of_week, appliance) para convertê-las em formato numérico.
+**Tratamento de Valores Ausentes e Escalonamento:**
 
-Tratamento de Valores Ausentes e Escalonamento:
+- Utilizamos `SimpleImputer` para substituir valores faltantes pela média.
+- Aplicamos `StandardScaler` para normalizar as features numéricas.
 
-Utilizamos SimpleImputer para substituir valores faltantes pela média.
+### 2.2. Modelagem
 
-Aplicamos StandardScaler para normalizar as features numéricas.
+#### 2.2.1. Random Forest Regressor
 
-2.2. Modelagem
+**Objetivo:**  
+Prever o consumo de energia elétrica (`energy_consumption_kWh`).
 
-2.2.1. Random Forest Regressor
+**Configuração:**  
+Utilizamos um modelo de Random Forest com:
 
-Objetivo: Prever o consumo de energia elétrica (energy_consumption_kWh).
+- 100 árvores (`n_estimators=100`)
+- `random_state=42` para reprodutibilidade
+- `n_jobs=-1` para paralelização
 
-Configuração: Utilizamos um modelo de Random Forest com 100 árvores (n_estimators=100), random_state=42 para reprodutibilidade e n_jobs=-1 para paralelização.
+**Avaliação:**  
+As métricas utilizadas foram:
 
-Avaliação: Métricas utilizadas foram MAE, RMSE e R².
+- **MAE (Mean Absolute Error)**
+- **RMSE (Root Mean Squared Error)**
+- **R² (Coeficiente de Determinação)**
 
-2.2.2. Autoencoder
+#### 2.2.2. Autoencoder
 
-Objetivo: Detectar anomalias no consumo de energia.
+**Objetivo:**  
+Detectar anomalias no consumo de energia.
 
-Arquitetura: Construímos um Autoencoder com uma camada de codificação de 8 neurônios e uma camada de decodificação correspondente, utilizando regularização L1 para evitar overfitting.
+**Arquitetura:**  
+Construímos um Autoencoder com:
 
-Treinamento: Treinamos o modelo com 50 épocas e batch size de 32, monitorando a perda de validação.
+- Uma camada de codificação de 8 neurônios
+- Uma camada de decodificação correspondente
+- Regularização L1 para evitar overfitting
 
-Detecção de Anomalias: Calculamos o erro de reconstrução e definimos um limiar baseado no percentil 95 para identificar anomalias.
+**Treinamento:**  
+Treinamos o modelo com:
 
-3\. Resultados Obtidos
+- 50 épocas
+- `batch_size` de 32
+- Monitoramento da perda de validação
 
-3.1. Random Forest Regressor
+**Detecção de Anomalias:**  
+Calculamos o erro de reconstrução e definimos um limiar baseado no percentil 95 para identificar anomalias.
 
-MAE (Mean Absolute Error): 1.23 kWh
+## 3. Resultados Obtidos
 
-Interpretação: Em média, as previsões do modelo têm um erro absoluto de aproximadamente 1.23 kWh em relação ao consumo real.
+### 3.1. Random Forest Regressor
 
-RMSE (Root Mean Squared Error): 1.42 kWh
+- **MAE (Mean Absolute Error):** 1.23 kWh  
+  *Interpretação:* Em média, as previsões do modelo têm um erro absoluto de aproximadamente 1.23 kWh em relação ao consumo real.
 
-Interpretação: O modelo comete erros ligeiramente maiores em alguns casos, já que o RMSE penaliza mais erros altos.
+- **RMSE (Root Mean Squared Error):** 1.42 kWh  
+  *Interpretação:* O modelo comete erros ligeiramente maiores em alguns casos, já que o RMSE penaliza mais erros altos.
 
-R² (Coeficiente de Determinação): -0.0186
+- **R² (Coeficiente de Determinação):** -0.0186  
+  *Interpretação:* O valor negativo indica que o modelo performa pior do que uma abordagem simples baseada na média dos valores reais.
 
-Interpretação: O valor negativo indica que o modelo performa pior do que uma abordagem simples baseada na média dos valores reais.
+### 3.2. Autoencoder
 
-3.2. Autoencoder
-
-Perda de Treino e Validação:
-
+**Perda de Treino e Validação:**  
 Observamos uma redução consistente na perda de treino e validação ao longo das épocas, indicando que o modelo está aprendendo a reconstruir os dados.
 
-Detecção de Anomalias:
+**Detecção de Anomalias:**
 
-Limiar de Anomalia: Definido no percentil 95 dos erros de reconstrução.
+- **Limiar de Anomalia:** Definido no percentil 95 dos erros de reconstrução.
+- **Anomalias Detectadas:** Foram identificadas diversas anomalias no conjunto de teste, indicando padrões atípicos no consumo de energia.
 
-Anomalias Detectadas: Foram identificadas diversas anomalias no conjunto de teste, indicando padrões atípicos no consumo de energia.
+## 4. Conclusões
 
-4\. Conclusões
+O projeto demonstrou o processo de previsão e detecção de anomalias no consumo de energia em residências inteligentes utilizando **Random Forest Regressor** e **Autoencoder**. Os principais pontos observados são:
 
-O projeto demonstrou o processo de previsão e detecção de anomalias no consumo de energia em residências inteligentes utilizando Random Forest Regressor e Autoencoder. Os principais pontos observados são:
+- **Random Forest Regressor:**  
+  Apesar de ser um modelo robusto para dados tabulares, os resultados obtidos (MAE: 1.23 kWh, RMSE: 1.42 kWh, R²: -0.0186) indicam que o modelo atual não está capturando eficazmente os padrões de consumo de energia. O R² negativo sugere que o modelo é menos eficaz do que uma previsão baseada na média dos valores reais, possivelmente devido à necessidade de ajustes nos hiperparâmetros ou inclusão de features mais relevantes.
 
-Random Forest Regressor: Apesar de ser um modelo robusto para dados tabulares, os resultados obtidos (MAE: 1.23 kWh, RMSE: 1.42 kWh, R²: -0.0186) indicam que o modelo atual não está capturando eficazmente os padrões de consumo de energia. O R² negativo sugere que o modelo é menos eficaz do que uma previsão baseada na média dos valores reais, possivelmente devido à necessidade de ajustes nos hiperparâmetros ou inclusão de features mais relevantes.
-
-Autoencoder: O modelo conseguiu aprender a reconstruir os dados e identificar anomalias com base no erro de reconstrução. A definição de um limiar no percentil 95 permitiu detectar comportamentos atípicos no consumo energético, demonstrando a eficácia do Autoencoder para a tarefa de detecção de anomalias.
+- **Autoencoder:**  
+  O modelo conseguiu aprender a reconstruir os dados e identificar anomalias com base no erro de reconstrução. A definição de um limiar no percentil 95 permitiu detectar comportamentos atípicos no consumo energético, demonstrando a eficácia do Autoencoder para a tarefa de detecção de anomalias.
